@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit Your Personal Recipe</title>
+    <link href="recipe.css" rel="stylesheet" type="text/css" />
+</head>
+<body id="form-aboutus">
+    <form id="recipeForm">
+        <div id="directory">
+            <a href="index.html"><b>Main Menu</b></a>
+            <a href="form.html"><b>Submission Request</b></a>
+            <a href="aboutus.html"><b>About Us</b></a>
+        </div>
+
+        <h1>Submission Form</h1>
+
+        <div class="form-group">
+            <h3>Title of your Recipe:</h3>
+            <input type="text" id="title" name="title" required>
+        </div>
+
+        <div class="form-group">
+            <h3>List of Ingredients:</h3>
+            <p><em>Note: Type one ingredient at a time</em></p>
+            <input type="text" id="inputI-box" name="ingredients" required>
+            <div id="new-input-ingredients"></div>
+            <button type="button" class="button" onclick="addInputIngredients()">Add Extra Ingredient Box</button>
+            <button type="button" class="button" onclick="deleteIngredientButton()">Delete Previous Input Box</button>
+        </div>
+
+        <div class="form-group">
+            <h3>Step by Step Instructions:</h3>
+            <p><em>Note: Type one step at a time</em></p>
+            <input type="text" id="inputS-box" name="steps" required>
+            <div id="new-input-steps"></div>
+            <button type="button" class="button" onclick="addInputSteps()">Add Extra Step</button>
+            <button type="button" class="button" onclick="deleteStepButton()">Delete Previous Step Box</button>
+        </div>
+
+        <div class="form-group">
+            <h3>Image URL:</h3>
+            <p><em>Note: Use the Image Address URL by right clicking and selecting "Copy Image Address</em></p>
+            <input type="text" id="image" name="image" required>
+        </div>
+
+        <div>
+            <h3><span>Click Below to Submit:</span></h3>
+            <input type="submit" value="Submit Recipe">
+        </div>
+    </form>
+
+    <script>
+        function addInputIngredients() {
+            const container = document.getElementById('new-input-ingredients');
+            const newElem = document.createElement("input");
+            newElem.setAttribute("type", "text");
+            newElem.setAttribute("id", "inputI-box");
+            newElem.setAttribute("name", "ingredients");
+            container.appendChild(newElem);
+        }
+
+        function addInputSteps() {
+            const container = document.getElementById('new-input-steps');
+            const newElem = document.createElement("input");
+            newElem.setAttribute("type", "text");
+            newElem.setAttribute("id", "inputS-box");
+            newElem.setAttribute("name", "steps");
+            container.appendChild(newElem);
+        }
+
+        function deleteIngredientButton() {
+            var inputBox = document.getElementById('inputI-box');
+            if (inputBox) {
+                inputBox.parentNode.removeChild(inputBox);
+            } else {
+                console.log('Input box not found.');
+            }
+        }
+
+        function deleteStepButton() {
+            var inputBox = document.getElementById('inputS-box');
+            if (inputBox) {
+                inputBox.parentNode.removeChild(inputBox);
+            } else {
+                console.log('Input box not found.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const recipeToEdit = JSON.parse(localStorage.getItem('recipeToEdit'));
+            if (recipeToEdit) {
+                recipeToEdit.recipe.Ingredients = recipeToEdit.recipe.Ingredients.filter(ingredient => ingredient && ingredient.name);
+                recipeToEdit.recipe.Steps = recipeToEdit.recipe.Steps.filter(step => step);
+                document.getElementById('title').value = recipeToEdit.recipe.Name;
+                recipeToEdit.recipe.Ingredients.forEach(ingredient => {
+                    addInputIngredients();
+                    const inputs = document.querySelectorAll('input[name="ingredients"]');
+                    inputs[inputs.length - 1].value = ingredient.name;
+                });
+                recipeToEdit.recipe.Steps.forEach(step => {
+                    addInputSteps();
+                    const inputs = document.querySelectorAll('input[name="steps"]');
+                    inputs[inputs.length - 1].value = step;
+                });
+                document.getElementById('image').value = recipeToEdit.recipe.Image;
+                document.getElementById('recipeForm').dataset.editIndex = recipeToEdit.index;
+                localStorage.removeItem('recipeToEdit');
+            }
+        });
+
+        document.getElementById('recipeForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const ingredients = Array.from(document.querySelectorAll('input[name="ingredients"]')).map(input => input.value.trim()).filter(value => value);
+            const steps = Array.from(document.querySelectorAll('input[name="steps"]')).map(input => input.value.trim()).filter(value => value);
+            const image = document.getElementById('image').value.trim();
+
+            const recipe = {
+                Name: title,
+                Ingredients: ingredients.map(ingredient => ({ name: ingredient, amount: "" })),
+                Steps: steps,
+                Image: image
+            };
+
+            const form = document.getElementById('recipeForm');
+            let recipes = JSON.parse(localStorage.getItem('recipes')) || [];
+            if (form.dataset.editIndex) {
+                const index = parseInt(form.dataset.editIndex);
+                recipes[index] = recipe;
+                alert('Recipe updated successfully!');
+                form.removeAttribute('data-edit-index');
+            } else {
+                recipes.push(recipe);
+                alert('Recipe submitted successfully!');
+            }
+            localStorage.setItem('recipes', JSON.stringify(recipes));
+            form.reset();
+        });
+    </script>
+</body>
+</html>
